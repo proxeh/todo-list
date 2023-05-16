@@ -12,7 +12,7 @@ function addItem(e) {
 
 	// Validation
 	if (newItem === "") {
-		alert("Please add an item");
+		alert("Please add an item.");
 		return;
 	}
 
