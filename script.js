@@ -4,8 +4,10 @@
 const itemForm = document.getElementById("item-form");
 const itemInput = document.getElementById("item-input");
 const itemList = document.getElementById("item-list");
+const clearButton = document.getElementById("clear");
+const itemFilter = document.getElementById("filter");
 
-function addItem(e) {
+function onAddItemSubmit(e) {
 	e.preventDefault();
 
 	const newItem = itemInput.value;
@@ -16,15 +18,26 @@ function addItem(e) {
 		return;
 	}
 
+	// Create item DOM element
+	addItemToDOM(newItem);
+
+	// Add item to localStorage
+	addItemToStorage(newItem);
+
+	resetUI();
+
+	itemInput.value = "";
+}
+
+function addItemToDOM(item) {
 	const li = document.createElement("li");
-	li.appendChild(document.createTextNode(newItem));
+	li.appendChild(document.createTextNode(item));
 
 	const button = createButton("remove-item btn-link text-red");
 	li.appendChild(button);
 
+	// Add li to DOM
 	itemList.appendChild(li);
-
-	itemInput.value = "";
 }
 
 function createButton(classes) {
@@ -44,5 +57,106 @@ function createIcon(classes) {
 	return icon;
 }
 
-// Listeners
-itemForm.addEventListener("submit", addItem);
+function filterItems(e) {
+	const items = itemList.querySelectorAll("li");
+	const text = e.target.value.toLowerCase();
+
+	items.forEach((item) => {
+		const itemName = item.firstChild.textContent.toLowerCase();
+
+		if (itemName.indexOf(text) != -1) {
+			item.style.display = "flex";
+		} else {
+			item.style.display = "none";
+		}
+	});
+}
+
+function onClickItem(e) {
+	if (e.target.parentElement.classList.contains("remove-item")) {
+		removeItem(e.target.parentElement.parentElement);
+	}
+}
+
+function removeItem(item) {
+	if (confirm("Are you sure?")) {
+		// Remove from DOM
+		item.remove();
+		// Remove from localStorage
+		removeItemFromStorage(item.textContent);
+
+		resetUI();
+	}
+}
+function removeItemFromStorage(item) {
+	let itemsFromStorage = getItemsFromStorage();
+
+	itemsFromStorage = itemsFromStorage.filter((i) => i !== item);
+
+	localStorage.setItem("items", JSON.stringify(itemsFromStorage));
+}
+
+function clearItems(e) {
+	while (itemList.firstChild) {
+		itemList.removeChild(itemList.firstChild);
+	}
+
+	localStorage.removeItem("items");
+	resetUI();
+}
+
+// LocalStorage Stuff
+function addItemToStorage(item) {
+	const itemsFromStorage = getItemsFromStorage();
+
+	itemsFromStorage.push(item);
+
+	// Convert to JSON string & set to localStorage
+	localStorage.setItem("items", JSON.stringify(itemsFromStorage));
+}
+
+function getItemsFromStorage() {
+	let itemsFromStorage;
+	if (localStorage.getItem("items") === null) {
+		itemsFromStorage = [];
+	} else {
+		itemsFromStorage = JSON.parse(localStorage.getItem("items"));
+	}
+
+	return itemsFromStorage;
+}
+
+// Set up intial page UI
+function displayItems() {
+	const itemsFromStorage = getItemsFromStorage();
+	itemsFromStorage.forEach((item) => addItemToDOM(item));
+
+	resetUI();
+}
+
+// Reset UI
+function resetUI() {
+	const items = itemList.querySelectorAll("li");
+
+	if (items.length === 0) {
+		itemFilter.style.display = "none";
+		clearButton.style.display = "none";
+	} else {
+		itemFilter.style.display = "block";
+		clearButton.style.display = "block";
+	}
+}
+
+// Initialise App
+function initApp() {
+	// Listeners
+	itemForm.addEventListener("submit", onAddItemSubmit);
+	itemList.addEventListener("click", onClickItem);
+	clearButton.addEventListener("click", clearItems);
+	itemFilter.addEventListener("input", filterItems);
+	document.addEventListener("DOMContentLoaded", displayItems);
+
+	resetUI();
+}
+
+initApp();
