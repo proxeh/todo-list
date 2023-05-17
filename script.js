@@ -2,11 +2,14 @@
 
 // Global const
 const itemForm = document.getElementById("item-form");
+const itemFormBtn = itemForm.querySelector("button");
 const itemInput = document.getElementById("item-input");
 const itemList = document.getElementById("item-list");
 const clearButton = document.getElementById("clear");
 const itemFilter = document.getElementById("filter");
+let isEditMode = false;
 
+// Add Item on Submit
 function onAddItemSubmit(e) {
 	e.preventDefault();
 
@@ -16,6 +19,16 @@ function onAddItemSubmit(e) {
 	if (newItem === "") {
 		alert("Please add an item.");
 		return;
+	}
+
+	// Check for edit mode
+	if (isEditMode) {
+		const itemToEdit = itemList.querySelector(".edit-mode");
+
+		removeItemFromStorage(itemToEdit.textContent);
+		itemToEdit.classList.remove("edit-mode");
+		itemToEdit.remove();
+		isEditMode = false;
 	}
 
 	// Create item DOM element
@@ -28,7 +41,6 @@ function onAddItemSubmit(e) {
 
 	itemInput.value = "";
 }
-
 function addItemToDOM(item) {
 	const li = document.createElement("li");
 	li.appendChild(document.createTextNode(item));
@@ -40,6 +52,7 @@ function addItemToDOM(item) {
 	itemList.appendChild(li);
 }
 
+// Create Icon
 function createButton(classes) {
 	const button = document.createElement("button");
 	button.className = classes;
@@ -75,7 +88,23 @@ function filterItems(e) {
 function onClickItem(e) {
 	if (e.target.parentElement.classList.contains("remove-item")) {
 		removeItem(e.target.parentElement.parentElement);
+	} else {
+		setItemToEdit(e.target);
 	}
+}
+
+function setItemToEdit(item) {
+	isEditMode = true;
+
+	itemList
+		.querySelectorAll("li")
+		.forEach((i) => i.classList.remove("edit-mode"));
+
+	item.classList.add("edit-mode");
+	itemFormBtn.innerHTML = '<i class="fa-solid fa-pen"></i> Update Item';
+	itemFormBtn.classList.add("btn-edit");
+
+	itemInput.value = item.textContent;
 }
 
 function removeItem(item) {
@@ -136,6 +165,7 @@ function displayItems() {
 
 // Reset UI
 function resetUI() {
+	itemInput.value = "";
 	const items = itemList.querySelectorAll("li");
 
 	if (items.length === 0) {
@@ -145,6 +175,11 @@ function resetUI() {
 		itemFilter.style.display = "block";
 		clearButton.style.display = "block";
 	}
+
+	itemFormBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Item';
+	itemFormBtn.classList.remove("btn-edit");
+
+	isEditMode = false;
 }
 
 // Initialise App
